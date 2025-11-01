@@ -12,9 +12,16 @@ def get_binary_file_downloader_html(df):
 
 st.set_page_config(page_title="Heart Disease Predictor", layout="centered")
 st.title("Heart Disease Predictor")
-tab1, tab2, tab3 = st.tabs(["Predict", "Bulk Predict", "Model Information"])
+tab1, tab2, tab3 = st.tabs(["Predict", "Bulk Predict", "Model Information"]) 
+
+
+algonames = ['Decision Trees', 'Logistic Regression', 'Random Forest', 'Support Vector Machine', 'Grid Random Forest']
+modelnames = ['tree.pkl', 'LogisticRegression.pkl', 'RandomForest.pkl', 'SVM.pkl', 'gridrf.pkl']
+models = [pickle.load(open(m, 'rb')) for m in modelnames] 
 
 with tab1:
+    st.subheader("Enter Patient Data") 
+
     age = st.number_input("Age (years)", min_value=0, max_value=150)
     sex = st.selectbox("Sex", ["Male", "Female"])
     chest_pain = st.selectbox("Chest Pain Type", ["Typical Angina", "Atypical Angina", "Non-anginal Pain", "Asymptomatic"])
@@ -23,7 +30,7 @@ with tab1:
     fasting_bs = st.selectbox("Fasting Blood Sugar", ["<= 120 mg/dl", "> 120 mg/dl"])
     resting_ecg = st.selectbox("Resting ECG Results", ["Normal", "ST-T Wave Abnormality", "Left Ventricular Hypertrophy"])
     max_hr = st.number_input("Maximum Heart Rate Achieved", min_value=0, max_value=300)
-    exercise_angina = st.selectbox("Exercise-Induced Angina", ["Yes", "No"])
+    exercise_angina = st.selectbox("Exercise-Induced Angina", ["No", "Yes"])
     oldpeak = st.number_input("ST Depression", min_value=0.0, max_value=10.0)
     st_slope = st.selectbox("Slope of Peak Exercise ST Segment", ["Upsloping", "Flat", "Downsloping"])
 
@@ -31,7 +38,7 @@ with tab1:
     chest_pain = ['Typical Angina', 'Atypical Angina', 'Non-anginal Pain', 'Asymptomatic'].index(chest_pain)
     fasting_bs = 1 if fasting_bs == "> 120 mg/dl" else 0
     resting_ecg = ['Normal', 'ST-T Wave Abnormality', 'Left Ventricular Hypertrophy'].index(resting_ecg)
-    exercise_angina = 1 if exercise_angina == "Yes" else 0
+    exercise_angina = 0 if exercise_angina == "No" else 1
     st_slope = ['Upsloping', 'Flat', 'Downsloping'].index(st_slope)
 
     input_data = pd.DataFrame({
@@ -48,9 +55,6 @@ with tab1:
         'ST_Slope': [st_slope]
     })
 
-    algonames = ['Decision Trees', 'Logistic Regression', 'Random Forest', 'Support Vector Machine', 'Grid Random Forest']
-    modelnames = ['tree.pkl', 'LogisticRegression.pkl', 'RandomForest.pkl', 'SVM.pkl', 'gridrf.pkl']
-
     predictions = []
     def predict_heart_disease(data):
         for modelname in modelnames:
@@ -60,19 +64,18 @@ with tab1:
         return predictions
 
     if st.button("Submit"):
-        st.subheader('Results....')
-        st.markdown('--------------------------')
+        st.subheader('📊 Prediction Results')
 
-        result = predict_heart_disease(input_data)
+        results = predict_heart_disease(input_data)
 
-        for i in range(len(predictions)):
-        # for i in range(len(result)):
-            st.subheader(algonames[i])
-            if result[i][0] == 0:
-                st.write("✅ No Heart Disease Detected.")
+        # for i in range(len(predictions)):
+        for i in range(len(results)):
+            st.markdown(f"### ⚙️ {algonames[i]}")
+            if results[i][0] == 0:
+                st.success("✅ No Heart Disease Detected")
             else:
-                st.write("⚠️ Heart Disease Detected.")
-            st.markdown('--------------------------')
+                st.error("⚠️ Heart Disease Detected")
+            st.markdown("---")
 
 with tab2:
     st.title("Upload CSV File")
@@ -111,7 +114,8 @@ with tab2:
 
             for i in range(len(input_data)):
                 arr = input_data.iloc[i, :-1].values
-                input_data['Prediction LR'][i] = model.predict([arr])[0]
+                # input_data['Prediction LR'][i] = model.predict([arr])[0] 
+                input_data.loc[i, 'Prediction LR'] = model.predict([arr])[0]
 
             input_data.to_csv('heart_bulk_template.csv')
 
@@ -134,7 +138,7 @@ with tab3:
         'Logistic Regression': 85.86,
         'Random Forest': 84.23,
         'Support Vector Machine': 84.22, 
-        'GridRF': 89.75
+        'Grid Random Forest': 89.75
     }
     
     Models = list(data.keys())
