@@ -10,6 +10,7 @@ def get_binary_file_downloader_html(df):
     href = f'<a href="data:file/csv;base64,{b64}" download="predictions.csv">Download Predictions CSV</a>'
     return href
 
+st.set_page_config(page_title="Heart Disease Predictor", layout="centered")
 st.title("Heart Disease Predictor")
 tab1, tab2, tab3 = st.tabs(["Predict", "Bulk Predict", "Model Information"])
 
